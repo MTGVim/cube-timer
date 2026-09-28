@@ -16,7 +16,7 @@ async function walk(dir) {
  return (await Promise.all(entries.map(e => e.isDirectory() ? walk(path.join(dir,e.name)) : path.join(dir,e.name)))).flat();
 }
 const files = (await walk('docs')).filter(p => !p.endsWith('/sw.js') && !p.endsWith('.map') && !p.endsWith('.nojekyll')).sort();
-const assets = ['./', ...files.map(p => './' + p.slice(5))];
+const assets = ['./app.js?v=1.2.1', './', ...files.map(p => './' + p.slice(5))];
 const template = await readFile('scripts/sw-template.js','utf8');
 await writeFile('docs/sw.js', template.replace('__ASSETS__', JSON.stringify(assets)));
 console.log(`Cached assets: ${assets.length}`);

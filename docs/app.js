@@ -3,7 +3,8 @@ import { formatTime, bestTime } from './core.js';
 import { openStore, transact } from './storage.js';
 const $ = id => document.getElementById(id);
 let db, records = [], running = false, busy = false, started = 0, frame = 0, current = '', pending = null, wakeLock = null, saved = false, generating = false;
-const channel = 'BroadcastChannel' in window ? new BroadcastChannel('cube-timer-records') : null;
+let channel = null;
+try { if ('BroadcastChannel' in window) channel = new BroadcastChannel('cube-timer-records'); } catch (error) { console.warn('Cross-tab notifications unavailable', error); }
 const announce = text => { $('status').textContent = text; };
 function reportStorageError(action, error) {
   const detail = `${error?.name || 'Error'}: ${error?.message || String(error)}`;
@@ -134,10 +135,13 @@ $('timer').addEventListener('keyup', event => { if (event.code === 'Space') even
 document.addEventListener('visibilitychange', () => { if (running && document.visibilityState === 'visible') keepAwake(); });
 window.addEventListener('beforeunload', event => { if (running || pending) { event.preventDefault(); event.returnValue = ''; } });
 if (channel) channel.onmessage = () => { if (db) refresh().catch(error => reportStorageError('기록 불러오기 실패', error)); };
-try { db = await openStore(); await refresh(); controls(); prepareScramble(); }
-catch (error) { reportStorageError('기록 저장소 열기 또는 기존 기록 이전 실패', error); }
+try { db = await openStore(); await refresh(); controls(); window.dispatchEvent(new Event('cube-timer-ready')); prepareScramble(); }
+catch (error) {
+  $('phase').textContent = '준비 실패'; $('hint').textContent = '아래 버튼으로 다시 불러오기';
+  window.dispatchEvent(new Event('cube-timer-init-error'));
+  reportStorageError('기록 저장소 열기 또는 기존 기록 이전 실패 (v1.2.1)', error);
+}
 let installPrompt;
 window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; $('install').hidden = false; });
 $('install').onclick = async () => { if (!installPrompt) return; await installPrompt.prompt(); installPrompt = null; $('install').hidden = true; };
 window.addEventListener('appinstalled', () => { $('install').hidden = true; });
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => announce('오프라인 준비에 실패했습니다. 온라인에서 다시 열어 주세요.'));
