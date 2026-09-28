@@ -5,6 +5,13 @@ const $ = id => document.getElementById(id);
 let db, records = [], running = false, busy = false, started = 0, frame = 0, current = '', pending = null, wakeLock = null, saved = false, generating = false;
 const channel = 'BroadcastChannel' in window ? new BroadcastChannel('cube-timer-records') : null;
 const announce = text => { $('status').textContent = text; };
+function reportStorageError(action, error) {
+  const detail = `${error?.name || 'Error'}: ${error?.message || String(error)}`;
+  console.error(`[Cube Timer] ${action}`, error);
+  const message = `${action}\n${detail}\n\n이 알림을 캡처해서 알려 주세요. 브라우저 데이터는 삭제하지 마세요.`;
+  announce(message);
+  window.alert(message);
+}
 
 async function prepareScramble() {
   if (running || busy || pending || generating) return;
@@ -80,12 +87,12 @@ async function savePending() {
     announce('기록을 저장했습니다. 타이머를 누르면 다음 스크램블이 표시됩니다.');
     channel?.postMessage('changed');
     await refresh();
-  } catch {
+  } catch (error) {
     if (pending) {
       db?.close(); db = null;
       $('phase').textContent = '저장 실패'; $('hint').textContent = '아래 버튼으로 저장 다시 시도';
     }
-    announce(pending ? '저장을 완료하지 못했습니다. 측정 결과는 화면에 남아 있습니다. 저장 다시 시도를 눌러 주세요.' : '기록은 저장했지만 목록을 불러오지 못했습니다.');
+    reportStorageError(pending ? '기록 저장 실패: 측정 결과를 유지했습니다. 저장 다시 시도를 눌러 주세요.' : '기록은 저장했지만 목록을 불러오지 못했습니다.', error);
   }
   finally { busy = false; controls(); }
 }
@@ -111,7 +118,7 @@ async function deleteRecords(record) {
   if (running || busy || pending || !(await confirmDelete(record))) return;
   busy = true; controls();
   try { await transact(db, record ? 'delete' : 'clear', record?.id); await refresh(); channel?.postMessage('changed'); announce(record ? '기록을 삭제했습니다.' : '전체 기록을 삭제했습니다.'); }
-  catch { announce('삭제하지 못했습니다. 다시 시도해 주세요.'); }
+  catch (error) { reportStorageError('기록 삭제 실패', error); }
   finally { busy = false; controls(); }
 }
 $('timer').onclick = toggle;
@@ -126,9 +133,9 @@ document.addEventListener('keydown', event => {
 $('timer').addEventListener('keyup', event => { if (event.code === 'Space') event.preventDefault(); });
 document.addEventListener('visibilitychange', () => { if (running && document.visibilityState === 'visible') keepAwake(); });
 window.addEventListener('beforeunload', event => { if (running || pending) { event.preventDefault(); event.returnValue = ''; } });
-if (channel) channel.onmessage = () => { if (db) refresh().catch(() => announce('기록을 불러오지 못했습니다.')); };
+if (channel) channel.onmessage = () => { if (db) refresh().catch(error => reportStorageError('기록 불러오기 실패', error)); };
 try { db = await openStore(); await refresh(); controls(); prepareScramble(); }
-catch { announce('이 브라우저에서 기록 저장소를 열 수 없습니다. 비공개 모드를 종료하거나 사이트 저장 권한을 확인해 주세요.'); }
+catch (error) { reportStorageError('기록 저장소 열기 또는 기존 기록 이전 실패', error); }
 let installPrompt;
 window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; $('install').hidden = false; });
 $('install').onclick = async () => { if (!installPrompt) return; await installPrompt.prompt(); installPrompt = null; $('install').hidden = true; };
