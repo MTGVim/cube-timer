@@ -1,2 +1,41 @@
-# cube-timer
-Offline 3×3 cube scramble and timer PWA with local solve history.
+# Cube Timer
+
+모바일용 3×3 큐브 스크램블 및 타이머 PWA입니다. 별도 서버, 계정, 외부 CDN, 빌드 의존성이 없습니다.
+
+## 기능
+
+- 연습용 무작위 20회전 스크램블을 생성합니다. 같은 축이 연속해서 나오지 않습니다. 공식 대회용 random-state 방식은 아닙니다.
+- 타이머를 누르거나 스페이스바를 누르면 측정을 시작하고 종료합니다.
+- 종료 시 시간, 날짜, 스크램블을 IndexedDB에 저장합니다. 최단 기록을 자동 계산합니다.
+- 측정 완료 후 타이머를 한 번 누르면 새 스크램블을 준비합니다. 큐브를 섞은 뒤 다시 누르면 측정합니다.
+- 개별 기록 및 전체 기록 삭제 전에 확인창을 표시합니다.
+- 저장 실패 시 결과를 화면에 유지하며 다시 저장할 수 있습니다.
+- 온라인으로 처음 접속하여 서비스 워커 설치를 마친 뒤에는 오프라인에서 사용할 수 있습니다.
+- 지원되는 기기에서는 측정 중 화면이 꺼지지 않도록 요청합니다.
+
+기록은 해당 브라우저와 사이트 주소에 귀속됩니다. 기기 간 동기화와 백업은 제공하지 않습니다. 브라우저 데이터 삭제나 사이트 주소 변경 시 기존 기록을 사용할 수 없습니다. 측정 중 앱을 강제 종료하면 진행 중인 측정은 사라집니다.
+
+## GitHub Pages 배포
+
+1. GitHub에 `cube-timer` 저장소를 만들고 이 폴더의 내용을 올립니다.
+2. 저장소의 Settings → Pages에서 Source를 Deploy from a branch로 선택합니다.
+3. Branch를 main, 폴더를 /docs로 설정하고 저장합니다.
+4. GitHub가 표시하는 배포 URL을 엽니다.
+
+앱에 상대 경로만 사용하므로 저장소 이름을 바꿔도 사용할 수 있습니다. GitHub Pages의 브랜치 배포를 사용하므로 별도 Actions 설정은 필요하지 않습니다.
+
+공식 안내: https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
+
+## 로컬 실행과 검증
+
+```sh
+npm start
+# http://localhost:8080
+npm test
+```
+
+실행에는 Python 3, 테스트에는 Node.js 18 이상이 필요합니다. 앱 자체는 순수 HTML/CSS/JavaScript입니다.
+
+수동 검증: 시작/정지, 스페이스바, 새로고침 후 기록 유지, 최단 기록 삭제 후 갱신, 전체 삭제 취소/확정, 오프라인 재실행, Android 설치를 확인하세요.
+
+업데이트할 때는 `docs/sw.js`의 캐시 버전도 올리세요. 새 버전은 기존 앱 탭을 모두 닫고 다시 열면 활성화됩니다. 캐시 정리는 해당 앱의 scope만 대상으로 하며 IndexedDB 기록은 삭제하지 않습니다.
