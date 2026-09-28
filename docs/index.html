@@ -13,7 +13,7 @@
 <section class="practice" aria-label="큐브 연습">
 <div class="section-head"><h2>스크램블</h2><button id="shuffle" class="text-button">↻ 새로 섞기</button></div>
 <div id="scramble" class="scramble" aria-label="스크램블 회전 순서"></div>
-<details class="notation"><summary>회전 기호 안내</summary><p>해당 면을 정면에서 볼 때, 글자만 있으면 시계 방향 90°, ′는 반시계 방향 90°, 2는 180° 회전입니다.</p><p>R 오른쪽 / L 왼쪽 / U 위 / D 아래 / F 앞 / B 뒤</p><p>연습용 무작위 20회전입니다. 공식 대회용 스크램블은 아닙니다.</p></details>
+<details class="notation"><summary>회전 기호 안내</summary><p>해당 면을 정면에서 볼 때, 글자만 있으면 시계 방향 90°, ′는 반시계 방향 90°, 2는 180° 회전입니다.</p><p>R 오른쪽 / L 왼쪽 / U 위 / D 아래 / F 앞 / B 뒤</p><p>Random-state 방식으로 생성합니다. 공식 WCA 대회용 프로그램은 아닙니다.</p></details>
 <button id="timer" class="timer" aria-label="타이머 시작" disabled><span id="phase" class="phase">준비 중</span><span id="time" class="time">0:00.000</span><span id="hint" class="hint">눌러서 시작</span></button>
 <div class="under-timer"><span>PC에서는 스페이스바</span><button id="cancel" class="text-button" hidden>측정 취소</button></div>
 <div class="best"><span>나의 최단 기록</span><strong id="best">—</strong></div>
@@ -22,7 +22,7 @@
 </section>
 <section class="history" aria-labelledby="history-title"><div class="section-head"><h2 id="history-title">기록 <span id="count">0</span></h2><button id="delete-all" class="text-button danger" disabled>전체 삭제</button></div><div id="records"></div></section>
 </div>
-<footer><p>기록은 이 브라우저에만 저장됩니다.<br>브라우저 데이터를 지우면 기록도 삭제됩니다.</p><button id="install" hidden>앱 설치</button><details><summary>홈 화면에 추가하기</summary><p>Android: 브라우저 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요.<br>iPhone: Safari의 공유 메뉴에서 홈 화면에 추가를 선택하세요.<br>한 번 온라인으로 연 뒤에는 오프라인에서도 사용할 수 있습니다.</p></details></footer>
+<footer><p>기록은 이 브라우저에만 저장됩니다.<br>브라우저 데이터를 지우면 기록도 삭제됩니다.</p><button id="install" hidden>앱 설치</button><details><summary>홈 화면에 추가하기</summary><p>Android: 브라우저 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요.<br>iPhone: Safari의 공유 메뉴에서 홈 화면에 추가를 선택하세요.<br>한 번 온라인으로 연 뒤에는 오프라인에서도 사용할 수 있습니다.</p></details><p>스크램블: cubing.js 0.63.8 / <a href="./licenses/NOTICE.txt">오픈소스 고지</a></p></footer>
 </main>
 <dialog id="confirm"><form method="dialog"><h2 id="confirm-title">기록을 삭제할까요?</h2><p id="confirm-body"></p><div class="dialog-actions"><button value="cancel" autofocus>취소</button><button value="delete" class="destructive">삭제</button></div></form></dialog>
 <script type="module" src="./app.js"></script>

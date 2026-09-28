@@ -1,0 +1,12 @@
+Bundled license information:
+
+cubing/dist/lib/cubing/chunks/chunk-H5KMIDAF.js:
+  /*! Bundled license information:
+  
+  @cubing/comlink-everywhere/dist/lib/comlink/index.js:
+    (**
+     * @license
+     * Copyright 2019 Google LLC
+     * SPDX-License-Identifier: Apache-2.0
+     *)
+  */

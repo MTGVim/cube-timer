@@ -1,17 +1,37 @@
-import { scramble, formatTime, bestTime } from './core.js';
+import { generateScramble } from './scrambler.js';
+import { formatTime, bestTime } from './core.js';
 import { openStore, transact } from './storage.js';
 const $ = id => document.getElementById(id);
-let db, records = [], running = false, busy = false, started = 0, frame = 0, current = scramble(), pending = null, wakeLock = null, saved = false;
+let db, records = [], running = false, busy = false, started = 0, frame = 0, current = '', pending = null, wakeLock = null, saved = false, generating = false;
 const channel = 'BroadcastChannel' in window ? new BroadcastChannel('cube-timer-records') : null;
 const announce = text => { $('status').textContent = text; };
+
+async function prepareScramble() {
+  if (running || busy || pending || generating) return;
+  generating = true; current = ''; saved = false;
+  $('scramble').replaceChildren(); $('scramble').setAttribute('aria-busy', 'true');
+  $('phase').textContent = '생성 중'; $('time').textContent = '0:00.000';
+  $('hint').textContent = '잠시 기다려 주세요'; announce('스크램블을 생성하고 있습니다.'); controls();
+  try {
+    current = await generateScramble(); showScramble();
+    $('phase').textContent = '준비'; $('hint').textContent = '눌러서 시작';
+    announce('새 스크램블로 큐브를 섞은 뒤 시작하세요.');
+  } catch {
+    $('phase').textContent = '생성 실패'; $('hint').textContent = '새로 섞기를 눌러 다시 시도';
+    announce('스크램블을 생성하지 못했습니다. 새로 섞기를 눌러 보세요. 계속 실패하면 온라인에서 앱을 닫고 다시 열어 주세요.');
+  } finally {
+    generating = false; $('scramble').setAttribute('aria-busy', 'false'); controls();
+  }
+}
+
 function showScramble() {
   $('scramble').replaceChildren(...current.split(' ').map(move => {
     const node = document.createElement('span'); node.textContent = move.replace("'", '′'); return node;
   }));
 }
 function controls() {
-  $('timer').disabled = !db || busy || !!pending;
-  $('shuffle').disabled = running || busy || !!pending;
+  $('timer').disabled = !db || busy || !!pending || generating || !current;
+  $('shuffle').disabled = running || busy || !!pending || generating;
   $('delete-all').disabled = !records.length || running || busy || !!pending;
   $('cancel').hidden = !running;
   $('retry').hidden = !pending;
@@ -63,14 +83,14 @@ async function savePending() {
   finally { busy = false; controls(); }
 }
 function toggle() {
-  if (!db || busy || pending || $('confirm').open) return;
+  if (!db || busy || pending || generating || !current || $('confirm').open) return;
   if (running) {
     const ms = Math.floor(performance.now() - started);
     finishUI(); $('time').textContent = formatTime(ms);
     pending = { id: crypto.randomUUID(), ms, at: Date.now(), scramble: current };
     $('phase').textContent = '저장 중'; savePending();
   } else {
-    if (saved) { current = scramble(); showScramble(); saved = false; $('time').textContent = '0:00.000'; $('phase').textContent = '준비'; $('hint').textContent = '눌러서 시작'; announce('새 스크램블로 큐브를 섞은 뒤 시작하세요.'); return; }
+    if (saved) { prepareScramble(); return; }
     running = true; started = performance.now(); $('timer').classList.add('running'); $('timer').setAttribute('aria-label', '타이머 정지 및 기록 저장'); $('phase').textContent = '측정 중'; $('hint').textContent = '눌러서 정지'; announce(''); controls(); tick(); keepAwake();
   }
 }
@@ -88,7 +108,7 @@ async function deleteRecords(record) {
   finally { busy = false; controls(); }
 }
 $('timer').onclick = toggle;
-$('shuffle').onclick = () => { current = scramble(); saved = false; showScramble(); $('phase').textContent = '준비'; $('time').textContent = '0:00.000'; $('hint').textContent = '눌러서 시작'; announce(''); };
+$('shuffle').onclick = prepareScramble;
 $('cancel').onclick = () => { finishUI(); $('time').textContent = '0:00.000'; $('phase').textContent = '준비'; $('hint').textContent = '눌러서 시작'; announce('측정을 취소했습니다. 기록을 저장하지 않았습니다.'); controls(); };
 $('delete-all').onclick = () => deleteRecords(); $('retry').onclick = savePending;
 document.addEventListener('keydown', event => {
@@ -100,8 +120,7 @@ $('timer').addEventListener('keyup', event => { if (event.code === 'Space') even
 document.addEventListener('visibilitychange', () => { if (running && document.visibilityState === 'visible') keepAwake(); });
 window.addEventListener('beforeunload', event => { if (running || pending) { event.preventDefault(); event.returnValue = ''; } });
 if (channel) channel.onmessage = () => { if (db) refresh().catch(() => announce('기록을 불러오지 못했습니다.')); };
-showScramble();
-try { db = await openStore(); await refresh(); $('phase').textContent = '준비'; controls(); }
+try { db = await openStore(); await refresh(); controls(); prepareScramble(); }
 catch { announce('이 브라우저에서 기록 저장소를 열 수 없습니다. 비공개 모드를 종료하거나 사이트 저장 권한을 확인해 주세요.'); }
 let installPrompt;
 window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; $('install').hidden = false; });

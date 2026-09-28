@@ -1,17 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scramble, formatTime, bestTime } from '../docs/core.js';
+import { formatTime, bestTime } from '../docs/core.js';
 import fs from 'node:fs';
 import vm from 'node:vm';
-test('20 legal moves, no consecutive rotations on the same axis', () => {
- for(let n=0;n<1000;n++) {
-  const moves=scramble().split(' '); assert.equal(moves.length,20);
-  for(let i=0;i<moves.length;i++) {
-   assert.match(moves[i],/^[UDLRFB]('|2)?$/);
-   if(i) assert.notEqual(Math.floor('UDLRFB'.indexOf(moves[i][0])/2),Math.floor('UDLRFB'.indexOf(moves[i-1][0])/2));
-  }
- }
-});
 test('time boundaries and best record after deletion', () => {
  assert.equal(formatTime(0),'0:00.000'); assert.equal(formatTime(59999.9),'0:59.999'); assert.equal(formatTime(60000),'1:00.000'); assert.equal(formatTime(3600000),'60:00.000');
  const records=[{ms:12500},{ms:5000},{ms:6000}]; assert.equal(bestTime(records),5000); records.splice(1,1); assert.equal(bestTime(records),6000); assert.equal(bestTime([]),Infinity);

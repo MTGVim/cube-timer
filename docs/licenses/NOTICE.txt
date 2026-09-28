@@ -1,0 +1,20 @@
+Cube Timer — third-party software
+
+cubing.js 0.63.8
+https://github.com/cubing/cubing.js
+Used under the Mozilla Public License 2.0 (LICENSE-MPL.md).
+Original code by Lucas Garron, Tom Rokicki and cubing.js contributors.
+Includes puzzle solvers by Chen Shuang and torchlight/xyzzy.
+Sources are included in the adjacent vendor/cubing/*.js.map files (sourcesContent).
+Rebuild instructions and package lockfile are in the Cube Timer repository:
+https://github.com/MTGVim/cube-timer
+
+Vendored Chen Shuang / cs0x7f code uses the MIT license.
+See LICENSE-MIT-CS0X7F.txt and copyright notices in the source maps.
+LICENSE-CS0X7F.txt preserves the upstream cstimer license file as supplied.
+
+@cubing/comlink-everywhere (bundled by cubing.js)
+Copyright 2019 Google LLC; Apache-2.0.
+See LICENSE-APACHE-2.0.txt and vendor/cubing/*.LEGAL.txt.
+
+random-uint-below 3.3.0 — Unlicense (LICENSE-RANDOM-UINT.md).
