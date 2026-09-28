@@ -34,7 +34,7 @@ function controls() {
   $('shuffle').disabled = running || busy || !!pending || generating;
   $('delete-all').disabled = !records.length || running || busy || !!pending;
   $('cancel').hidden = !running;
-  $('retry').hidden = !pending;
+  $('retry').hidden = !pending; $('retry').disabled = busy;
   document.querySelectorAll('[data-delete]').forEach(button => { button.disabled = running || busy || !!pending; });
 }
 async function refresh() {
@@ -70,16 +70,23 @@ function finishUI() {
 }
 async function savePending() {
   if (!pending || busy) return;
-  busy = true; controls();
+  busy = true; $('phase').textContent = '저장 중'; $('hint').textContent = '잠시 기다려 주세요'; controls();
   const record = pending;
   try {
+    if (!db) db = await openStore();
     await transact(db, 'put', record);
     pending = null; saved = true;
     $('phase').textContent = '측정 완료'; $('hint').textContent = '눌러서 새 스크램블';
     announce('기록을 저장했습니다. 타이머를 누르면 다음 스크램블이 표시됩니다.');
     channel?.postMessage('changed');
     await refresh();
-  } catch { announce(pending ? '기록을 저장하지 못했습니다. 이 화면을 유지하고 저장을 다시 시도해 주세요.' : '기록은 저장했지만 목록을 불러오지 못했습니다.'); }
+  } catch {
+    if (pending) {
+      db?.close(); db = null;
+      $('phase').textContent = '저장 실패'; $('hint').textContent = '아래 버튼으로 저장 다시 시도';
+    }
+    announce(pending ? '저장을 완료하지 못했습니다. 측정 결과는 화면에 남아 있습니다. 저장 다시 시도를 눌러 주세요.' : '기록은 저장했지만 목록을 불러오지 못했습니다.');
+  }
   finally { busy = false; controls(); }
 }
 function toggle() {
